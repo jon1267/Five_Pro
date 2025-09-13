@@ -8,7 +8,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
-
 class ImportController extends Controller
 {
     public function __construct(protected UploadCsv $uploadCsv) {
