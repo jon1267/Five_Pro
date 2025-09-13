@@ -2,47 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Import\Csv;
+use App\Services\Upload\UploadCsv;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+
 
 class ImportController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+    public function __construct(protected UploadCsv $uploadCsv) {
+        $this->uploadCsv = new UploadCsv();
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function csvImport(Request $request): JsonResponse
     {
-        //
-    }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        $fileName = $this->uploadCsv->toStorage($request);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        if(!is_null($fileName) && File::exists('storage/books/'.$fileName)) {
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            $importData = Csv::parseCsv(public_path('storage/books/'.$fileName), ',');
+
+            if ($this->uploadCsv->toDatabase($importData)) {
+                return response()->json(['message' => 'CSV data imported successfully']);
+            }
+        }
+
+        return response()->json(['message' => 'CSV data import error'], 400);
     }
 }
