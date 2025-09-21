@@ -66,39 +66,45 @@ class UploadCsv
                     ]);
 
                     if (!empty($data['authors'])) {
+                        $attachAuthors = [];
                         foreach ($data['authors'] as $author) {
                             if (Author::query()->where('name', $author)->doesntExist()) {
-                                Author::create([
-                                    'name' => $author,
-                                ]);
+                                $createdAuthor = Author::create(['name' => $author]);
+                                $attachAuthors[] = $createdAuthor->id;
                             }
                         }
-                        $authors = Author::whereIn('name', $data['authors'])->pluck('id')->toArray();
-                        $book->authors()->attach($authors);
+
+                        if (!empty($attachAuthors)) {
+                            $book->authors()->attach($attachAuthors);
+                        }
                     }
 
                     if (!empty($data['genre'])) {
+                        $attachGenres = [];
                         foreach ($data['genre'] as $genre) {
                             if (Genre::query()->where('name', $genre)->doesntExist()) {
-                                Genre::create([
-                                    'name' => $genre,
-                                ]);
+                                $createdGenre = Genre::create(['name' => $genre]);
+                                $attachGenres[] = $createdGenre->id;
                             }
                         }
-                        $genre = Genre::whereIn('name', $data['genre'])->pluck('id')->toArray();
-                        $book->genres()->attach($genre);
+
+                        if (!empty($attachGenres)) {
+                            $book->genres()->attach($attachGenres);
+                        }
                     }
 
                     if (!empty($data['publisher'])) {
+                        $attachPublishers = [];
                         foreach ($data['publisher'] as $publisher) {
                             if (Publisher::query()->where('name', $publisher)->doesntExist()) {
-                                Publisher::create([
-                                    'name' => $publisher,
-                                ]);
+                                $createdPublisher = Publisher::create(['name' => $publisher]);
+                                $attachPublishers[] = $createdPublisher->id;
                             }
                         }
-                        $publishers = Publisher::whereIn('name', $data['publisher'])->pluck('id')->toArray();;
-                        $book->publishers()->attach($publishers);
+
+                        if (!empty($attachPublishers)) {
+                            $book->publishers()->attach($attachPublishers);
+                        }
                     }
 
                 }
