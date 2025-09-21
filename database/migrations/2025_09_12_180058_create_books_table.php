@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('edition')->nullable();
-            $table->string('publisher')->nullable();
             $table->date('year')->nullable();
             $table->string('format')->nullable();
             $table->string('pages')->nullable();

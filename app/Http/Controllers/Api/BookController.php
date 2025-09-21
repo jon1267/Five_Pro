@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BookResource;
-use App\Http\Resources\DetailBookResource;
-//use Illuminate\Http\Request;
+use Illuminate\Http\Request;
 use App\Http\Requests\CreateBookRequest;
 use App\Models\Book;
 use Illuminate\Http\JsonResponse;
@@ -15,10 +14,21 @@ class BookController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $allBooks = Book::with('authors')->get();
-        return BookResource::collection($allBooks);
+        $query = Book::with(['authors', 'genres', 'publishers']);
+
+        if ($request->filled('search')) {
+            $query->search($request->input('search'));
+        }
+
+        if ($request->filled('sort')) {
+            $query->sort($request->input('sort'), $request->input('direction', 'asc'));
+        }
+
+        $books = $query->paginate(10); //$books = Book::with(['authors','genres','publisher'])->paginate(10);
+
+        return BookResource::collection($books);
     }
 
     /**
@@ -26,8 +36,12 @@ class BookController extends Controller
      */
     public function store(CreateBookRequest $request)
     {
-        $book = Book::create($request->validated());
-        return new DetailBookResource($book);
+        $book = Book::create($request->except('authors', 'genres', 'publishers'));
+        $book->authors()->attach($request->authors);
+        $book->genres()->attach($request->genres);
+        $book->publishers()->attach($request->publishers);
+
+        return new BookResource($book->load(['authors', 'genres', 'publishers']));
     }
 
     /**
@@ -35,8 +49,8 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        $bookAllDetails = $book->load(['authors', 'genres']);;
-        return new DetailBookResource($bookAllDetails);
+        $bookAllDetails = $book->load(['authors', 'genres', 'publishers']);
+        return new BookResource($bookAllDetails);
     }
 
     /**
@@ -44,8 +58,21 @@ class BookController extends Controller
      */
     public function update(CreateBookRequest $request, Book $book)
     {
-        $book->update($request->validated());
-        return new DetailBookResource($book);
+        $book->update($request->except('authors', 'genres', 'publishers'));
+
+        if ($request->has('authors')) {
+            $book->authors()->sync($request->authors);
+        }
+
+        if ($request->has('genres')) {
+            $book->genres()->sync($request->genres);
+        }
+
+        if ($request->has('publishers')) {
+            $book->publishers()->sync($request->publishers);
+        }
+
+        return new BookResource($book->load(['authors', 'genres', 'publishers']));
     }
 
     /**

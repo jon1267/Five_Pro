@@ -25,25 +25,38 @@ class CreateBookRequest extends FormRequest
             return [
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
-                'publisher' => 'required|string|max:255',
                 'year' => 'required|date',
                 'edition' => 'nullable|string|max:255',
                 'format' => 'nullable|string|max:255',
                 'pages' => 'nullable|string',
                 'country' => 'nullable|string|max:255',
                 'isbn' => 'nullable|string|max:255',
+
+                'authors' => 'required|array',
+                'authors.*' => 'required|integer|exists:authors,id',
+                'genres' => 'required|array',
+                'genres.*' => 'required|integer|exists:genres,id',
+                'publishers' => 'required|array',
+                'publishers.*' => 'required|integer|exists:publishers,id',
             ];
+
         } elseif ($this->method() === 'PUT' || $this->method() === 'PATCH') {
             return [
                 'title' => 'sometimes|string|max:255',
                 'description' => 'sometimes|required|string',
-                'publisher' => 'sometimes|required|string|max:255',
                 'year' => 'sometimes|required|date',
                 'edition' => 'sometimes|nullable|string|max:255',
                 'format' => 'sometimes|nullable|string|max:255',
                 'pages' => 'sometimes|nullable|string',
                 'country' => 'sometimes|nullable|string|max:255',
                 'isbn' => 'sometimes|nullable|string|max:255',
+
+                'authors' => 'sometimes|array',
+                'authors.*' => 'sometimes|integer|exists:authors,id',
+                'genres' => 'sometimes|array',
+                'genres.*' => 'sometimes|integer|exists:genres,id',
+                'publishers' => 'sometimes|array',
+                'publishers.*' => 'sometimes|integer|exists:publishers,id',
             ];
         }
 

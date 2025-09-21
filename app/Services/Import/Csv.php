@@ -11,8 +11,9 @@ class Csv {
 
         if (($handle = fopen($filename, 'r')) !== FALSE) {
             while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
-                $row = str_replace("\u{FEFF}", "", $row); // remove BOM
                 if(!$header) {
+                    // remove BOM only from the first line CSV, one time
+                    $row = preg_replace('/^\x{FEFF}/u', '', $row);
                     $header = self::lower($row);
                 } else {
                     $data[] = array_combine($header, $row);
