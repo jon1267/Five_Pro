@@ -32,13 +32,15 @@ class ExampleTest extends TestCase
         $book = [
             'title' => "Book No 14.",
             'description' => "Book 14 description is simply dummy text of the printing and typesetting industry.",
-            'publisher' => "Jones-Nord-Schmidt",
             'year' => "1991-01-15",
             'edition' => "2",
             'format' => 'Paparazzo',
             'pages' => '490',
             'country' => 'Canada',
             'isbn' => '9780446521440',
+            'authors' => [1,2],
+            'genres' => [2,4],
+            'publisher' => [1,3]
         ];
         $response = $this->postJson('/api/books', $book);
 
@@ -53,13 +55,15 @@ class ExampleTest extends TestCase
         $book = [
             'title' => '',
             'description' => '',
-            'publisher' => '',
             'year' => '',
+            'authors' => null,
+            'genres' => null,
+            'publisher' => null,
         ];
 
         $response = $this->postJson('/api/books', $book);
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['title', 'description', 'publisher', 'year']);
+        $response->assertJsonValidationErrors(['title', 'description', 'year', 'authors', 'genres', 'publishers']);
     }
 
     public function test_api_book_update_successful()
@@ -95,6 +99,9 @@ class ExampleTest extends TestCase
             'pages' => '490',
             'country' => 'Canada',
             'isbn' => '9780446521440',
+            'authors' => [1,2],
+            'genres' => [2,4],
+            'publishers' => [1,3],
         ];
 
         $response1 = $this->postJson('/api/books', $book);

@@ -44,16 +44,27 @@ class UploadCsv
         }
 
         try {
-            DB::transaction(function () use ($importData) {
+            // turn off transaction may be it dont need here.
+            //DB::transaction(function () use ($importData) {
 
-                foreach ($importData as $key => $row) {
-                    $importData[$key]['authors'] = explode(';', $row['authors']);
-                    $importData[$key]['genre'] = explode(';', $row['genre']);
-                    $importData[$key]['publisher'] = explode(', ', $row['publisher']);
-                }
+            foreach ($importData as $key => $row) {
+                $importData[$key]['authors'] = explode(';', $row['authors']);
+                $importData[$key]['genre'] = explode(';', $row['genre']);
+                $importData[$key]['publisher'] = explode(', ', $row['publisher']);
+            }
 
-                foreach ($importData as  $data) {
+            $importBooksCount = 0;
 
+            foreach ($importData as  $data) {
+
+
+
+                $bookExists = Book::query()
+                    ->where('title', $data['title'])
+                    ->where('description', $data['description'])
+                    ->exists();
+
+                if (!$bookExists) {
                     $book = Book::create([
                         'title' => $data['title'],
                         'description' => $data['description'] ?? null,
@@ -65,54 +76,77 @@ class UploadCsv
                         'isbn' => $data['isbn'] ?? null,
                     ]);
 
-                    if (!empty($data['authors'])) {
-                        $attachAuthors = [];
-                        foreach ($data['authors'] as $author) {
-                            if (Author::query()->where('name', $author)->doesntExist()) {
-                                $createdAuthor = Author::create(['name' => $author]);
-                                $attachAuthors[] = $createdAuthor->id;
-                            }
-                        }
-
-                        if (!empty($attachAuthors)) {
-                            $book->authors()->attach($attachAuthors);
-                        }
-                    }
-
-                    if (!empty($data['genre'])) {
-                        $attachGenres = [];
-                        foreach ($data['genre'] as $genre) {
-                            if (Genre::query()->where('name', $genre)->doesntExist()) {
-                                $createdGenre = Genre::create(['name' => $genre]);
-                                $attachGenres[] = $createdGenre->id;
-                            }
-                        }
-
-                        if (!empty($attachGenres)) {
-                            $book->genres()->attach($attachGenres);
-                        }
-                    }
-
-                    if (!empty($data['publisher'])) {
-                        $attachPublishers = [];
-                        foreach ($data['publisher'] as $publisher) {
-                            if (Publisher::query()->where('name', $publisher)->doesntExist()) {
-                                $createdPublisher = Publisher::create(['name' => $publisher]);
-                                $attachPublishers[] = $createdPublisher->id;
-                            }
-                        }
-
-                        if (!empty($attachPublishers)) {
-                            $book->publishers()->attach($attachPublishers);
-                        }
-                    }
-
+                    $importBooksCount++;
+                } else {
+                    // If the Book already exists, we assume it has Authors, Genres, Publishers. We skip it.
+                    continue;
                 }
 
-            });
+                if (!empty($data['authors'])) {
+                    $attachAuthors = [];
+                    foreach ($data['authors'] as $author) {
+                        if (Author::query()->where('name', $author)->doesntExist()) {
+                            $createdAuthor = Author::create(['name' => $author]);
+                            $attachAuthors[] = $createdAuthor->id;
+                        } else {
+                            // Check if the author already exists in the database
+                            if ($existingAuthor = Author::query()->where('name', $author)->first()) {
+                                $attachAuthors[] = $existingAuthor->id;
+                            }
+                        }
+                    }
 
-           Log::info('CSV data imported successfully');
-           return ['message' => 'CSV data imported successfully', 'status' => 200];
+                    if (!empty($attachAuthors)) {
+                        $book->authors()->attach($attachAuthors);
+                    }
+                }
+
+                if (!empty($data['genre'])) {
+                    $attachGenres = [];
+                    foreach ($data['genre'] as $genre) {
+                        if (Genre::query()->where('name', $genre)->doesntExist()) {
+                            $createdGenre = Genre::create(['name' => $genre]);
+                            $attachGenres[] = $createdGenre->id;
+                        } else {
+                            // Check if the genre already exists in the database
+                            if ($existingGenre = Genre::query()->where('name', $genre)->first()) {
+                                $attachGenres[] = $existingGenre->id;
+                            }
+                        }
+                    }
+
+                    if (!empty($attachGenres)) {
+                        $book->genres()->attach($attachGenres);
+                    }
+                }
+
+                if (!empty($data['publisher'])) {
+                    $attachPublishers = [];
+                    foreach ($data['publisher'] as $publisher) {
+                        if (Publisher::query()->where('name', $publisher)->doesntExist()) {
+                            $createdPublisher = Publisher::create(['name' => $publisher]);
+                            $attachPublishers[] = $createdPublisher->id;
+                        } else {
+                            // Check if the publisher already exists in the database
+                            if ($existingPublisher = Publisher::query()->where('name', $publisher)->first()) {
+                                $attachPublishers[] = $existingPublisher->id;
+                            }
+                        }
+                    }
+
+                    if (!empty($attachPublishers)) {
+                        $book->publishers()->attach($attachPublishers);
+                    }
+                }
+            }
+
+            //});
+
+            $message = ($importBooksCount > 0) ?
+                'CSV data imported successfully. Was imported ' . $importBooksCount . ' books.' :
+                'CSV data import finish. No new books were imported.';
+            Log::info($message);
+            return ['message' => $message, 'status' => 200];
        } catch (\Exception $e) {
            Log::error('An error occurred during CSV data import transaction: ' . $e->getMessage());
            return ['message' => 'CSV data import error', 'status' => 400];
