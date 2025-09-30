@@ -9,3 +9,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::apiResource('books', BookController::class );
+
+Route::post('create-author', [BookController::class, 'createAuthor']);
+Route::post('create-genre', [BookController::class, 'createGenre']);
+Route::post('create-publisher', [BookController::class, 'createPublisher']);

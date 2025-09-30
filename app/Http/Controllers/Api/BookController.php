@@ -3,7 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AuthorResource;
 use App\Http\Resources\BookResource;
+use App\Http\Resources\GenreResource;
+use App\Http\Resources\PublisherResource;
+use App\Models\Author;
+use App\Models\Genre;
+use App\Models\Publisher;
 use Illuminate\Http\Request;
 use App\Http\Requests\CreateBookRequest;
 use App\Models\Book;
@@ -81,5 +87,38 @@ class BookController extends Controller
     public function destroy(Book $book): JsonResponse
     {
         return response()->json($book->delete(), 204);
+    }
+
+    public function createAuthor(Request $request): AuthorResource
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:authors,name',
+        ]);
+
+        $author = Author::create($request->only('name'));
+
+        return new AuthorResource($author);
+    }
+
+    public function createGenre(Request $request): GenreResource
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:genres,name',
+        ]);
+
+        $author = Genre::create($request->only('name'));
+
+        return new GenreResource($author);
+    }
+
+    public function createPublisher(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:publishers,name',
+        ]);
+
+        $publisher = Publisher::create($request->only('name'));
+
+        return new PublisherResource($publisher);
     }
 }

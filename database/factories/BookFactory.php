@@ -23,7 +23,6 @@ class BookFactory extends Factory
             'title' => fake()->title(),
             'description' => fake()->text(),
             'edition' => fake()->numerify('#'),
-            //'publisher' => fake()->company(),
             'year' => fake()->year(),
             'format' => fake()->randomElement(['paperback', 'hardcover']),
             'pages' => fake()->numerify(),
